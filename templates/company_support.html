@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HR Management — Company Support</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --blue-900:  #0e1b4d;
+      --blue-800:  #0e3a9e;
+      --blue-700:  #1a56db;
+      --blue-600:  #2563eb;
+      --blue-100:  #dbeafe;
+      --blue-50:   #eff6ff;
+      --amber:     #f59e0b;
+      --amber-lt:  #fef3c7;
+      --green:     #10b981;
+      --green-lt:  #ecfdf5;
+      --red:       #ef4444;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --slate-500: #64748b;
+      --slate-400: #94a3b8;
+      --slate-300: #cbd5e1;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --slate-50:  #f8fafc;
+      --white:     #ffffff;
+      --sidebar-w: 260px;
+      --header-h:  64px;
+      --radius:    12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--slate-100); color: var(--slate-800); min-height: 100vh; }
+
+    /* Header */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: var(--header-h);
+      background: linear-gradient(135deg, var(--blue-900) 0%, var(--blue-800) 40%, var(--blue-700) 100%);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.5rem 0 0; box-shadow: 0 2px 24px rgba(14,58,158,0.45);
+      color: #fff;
+    }
+    .header-brand {
+      display: flex; align-items: center; gap: 0;
+      width: var(--sidebar-w); padding: 0 1.25rem;
+      border-right: 1px solid rgba(255,255,255,0.1); height: 100%;
+    }
+    .brand-logo { width: 40px; height: 40px; margin-right: 12px; background: rgba(255,255,255,0.12); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .brand-text h1 { font-size: 15px; font-weight: 700; color: #fff; }
+    .brand-text span { font-size: 10px; color: rgba(255,255,255,0.55); letter-spacing: 0.8px; text-transform: uppercase; }
+    .header-right { display: flex; align-items: center; gap: 1rem; }
+    .header-version { background: rgba(255,255,255,0.12); color: var(--slate-900); font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+
+    /* Layout */
+    .layout { display: flex; height: 100vh; padding-top: var(--header-h); }
+
+    /* Sidebar */
+    .sidebar { width: var(--sidebar-w); flex-shrink: 0; background: var(--slate-900); overflow-y: auto; display: flex; flex-direction: column; border-right: 1px solid rgba(255,255,255,0.05); color: rgba(255,255,255,0.9); }
+    .sidebar-section { padding: 1.25rem 1rem 0.5rem; }
+    .sidebar-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.65); padding: 0 0.5rem; margin-bottom: 0.5rem; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; margin-bottom: 2px; color: rgba(255,255,255,0.84); font-size: 13.5px; font-weight: 500; text-decoration: none; transition: all 0.18s; }
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: var(--slate-900); }
+    .nav-item.active { background: rgba(26,86,219,0.2); color: var(--blue-100); position: relative; }
+    .nav-item.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--blue-700); border-radius: 0 2px 2px 0; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+    .sidebar-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 0.75rem 1rem; }
+    .sidebar-footer { margin-top: auto; padding: 1rem; border-top: 1px solid rgba(255,255,255,0.05); }
+    .sidebar-footer-card { background: rgba(26,86,219,0.15); border: 1px solid rgba(26,86,219,0.3); border-radius: 10px; padding: 12px 14px; }
+    .sidebar-footer-card p { font-size: 11.5px; color: rgba(255,255,255,0.78); line-height: 1.4; }
+    .sidebar-footer-card strong { color: #fff; }
+
+    /* Main */
+    .main { flex: 1; overflow-y: auto; background: var(--slate-50); }
+
+    /* Hero */
+    .hero {
+      background: linear-gradient(135deg, var(--blue-900) 0%, var(--blue-800) 50%, #1e3a8a 100%);
+      padding: 3.5rem 2.5rem;
+      position: relative; overflow: hidden;
+      color: #fff;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; top: -50%; right: -10%;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(26,86,219,0.3) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-content { position: relative; max-width: 640px; }
+    .hero-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--amber); margin-bottom: 1rem; }
+    .hero h1 { font-size: 34px; font-weight: 800; color: var(--white); letter-spacing: -0.8px; line-height: 1.15; margin-bottom: 1rem; }
+    .hero p { font-size: 15px; color: rgba(255,255,255,0.72); line-height: 1.65; margin-bottom: 1.75rem; }
+    .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px; border-radius: 8px; font-size: 13.5px; font-weight: 600;
+      cursor: pointer; border: none; text-decoration: none; transition: all 0.18s;
+    }
+    .btn-white { background: var(--white); color: var(--slate-900); }
+    .btn-white:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
+    .btn-ghost { background: rgba(255,255,255,0.12); color: var(--slate-900); border: 1px solid rgba(255,255,255,0.2); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.2); }
+    .btn-primary { background: var(--blue-700); color: #fff; }
+    .btn-primary:hover { background: var(--blue-800); box-shadow: 0 4px 12px rgba(26,86,219,0.4); }
+    .btn-outline { background: var(--white); color: var(--slate-700); border: 1px solid var(--slate-200); }
+    .btn-outline:hover { border-color: var(--blue-700); color: var(--blue-700); }
+
+    .about-card,
+    .contact-card,
+    .faq-item,
+    .status-item,
+    .sla-table {
+      color: var(--slate-900);
+    }
+
+    .hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.12); }
+    .hero-stat-value { font-size: 26px; font-weight: 800; color: var(--white); letter-spacing: -0.5px; }
+    .hero-stat-label { font-size: 12px; color: rgba(255,255,255,0.55); margin-top: 2px; }
+
+    /* Page content */
+    .content { padding: 2.5rem; display: flex; flex-direction: column; gap: 2.5rem; max-width: 1100px; }
+
+    /* Section header */
+    .section-eyebrow { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--blue-700); margin-bottom: 0.5rem; }
+    .section-title { font-size: 22px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.4px; margin-bottom: 0.5rem; }
+    .section-subtitle { font-size: 14px; color: var(--slate-500); line-height: 1.6; }
+
+    /* About cards */
+    .about-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; margin-top: 1.5rem; }
+    .about-card {
+      background: var(--white); border-radius: var(--radius);
+      padding: 1.5rem; border: 1px solid var(--slate-200);
+      color: var(--slate-900);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05); transition: all 0.2s;
+    }
+    .about-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
+    .about-card-icon { font-size: 2rem; margin-bottom: 0.75rem; display: block; }
+    .about-card h3 { font-size: 15px; font-weight: 700; color: var(--slate-800); margin-bottom: 0.5rem; }
+    .about-card p { font-size: 13.5px; color: var(--slate-500); line-height: 1.6; }
+
+    /* Contact */
+    .contact-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+    .contact-card {
+      background: var(--white); border-radius: var(--radius);
+      padding: 1.25rem 1.5rem; border: 1px solid var(--slate-200);
+      color: var(--slate-900);
+      display: flex; align-items: flex-start; gap: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05); transition: all 0.2s;
+    }
+    .contact-card:hover { border-color: var(--blue-700); box-shadow: 0 0 0 3px rgba(26,86,219,0.07); }
+    .contact-icon { width: 42px; height: 42px; border-radius: 10px; background: var(--blue-50); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .contact-info { min-width: 0; }
+    .contact-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--slate-400); margin-bottom: 3px; }
+    .contact-value { font-size: 14px; font-weight: 600; color: var(--slate-800); word-break: break-word; }
+    .contact-value a { color: var(--blue-700); text-decoration: none; }
+    .contact-value a:hover { text-decoration: underline; }
+    .contact-sub { font-size: 12px; color: var(--slate-400); margin-top: 2px; }
+
+    /* FAQ */
+    .faq-list { display: flex; flex-direction: column; gap: 8px; margin-top: 1.5rem; }
+    .faq-item {
+      background: var(--white); border: 1px solid var(--slate-200);
+      border-radius: var(--radius); overflow: hidden;
+      color: var(--slate-900);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .faq-question {
+      padding: 1rem 1.25rem; font-size: 14px; font-weight: 600; color: var(--slate-800);
+      cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+      transition: background 0.15s; user-select: none;
+    }
+    .faq-question:hover { background: var(--slate-50); }
+    .faq-question.open { color: var(--blue-700); background: var(--blue-50); }
+    .faq-chevron { font-size: 13px; color: var(--slate-400); transition: transform 0.25s; }
+    .faq-question.open .faq-chevron { transform: rotate(180deg); color: var(--blue-700); }
+    .faq-answer {
+      max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s;
+      font-size: 13.5px; color: var(--slate-600); line-height: 1.65;
+      padding: 0 1.25rem;
+    }
+    .faq-answer.open { max-height: 400px; padding: 0.75rem 1.25rem 1.25rem; }
+    .faq-answer code {
+      background: var(--slate-100); border: 1px solid var(--slate-200);
+      border-radius: 4px; padding: 2px 6px; font-family: 'JetBrains Mono', monospace;
+      font-size: 12px; color: var(--blue-800);
+    }
+
+    /* Status section */
+    .status-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin-top: 1.5rem; }
+    .status-item {
+      background: var(--white); border-radius: var(--radius);
+      padding: 1rem 1.25rem; border: 1px solid var(--slate-200);
+      color: var(--slate-900);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .status-light { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .status-light.green { background: var(--green); box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+    .status-light.amber { background: var(--amber); box-shadow: 0 0 0 3px rgba(245,158,11,0.2); }
+    .status-name { font-size: 13px; font-weight: 600; color: var(--slate-800); }
+    .status-uptime { font-size: 11.5px; color: var(--slate-400); }
+
+    /* SLA table */
+    .sla-table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; color: var(--slate-900); }
+    .sla-table th { padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--slate-900); background: var(--slate-100); border-bottom: 1px solid var(--slate-200); }
+    .sla-table td { padding: 11px 14px; font-size: 13.5px; color: var(--slate-700); border-bottom: 1px solid var(--slate-100); }
+    .sla-table tr:last-child td { border-bottom: none; }
+    .sla-badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .sla-badge.p1 { background: #fef2f2; color: #991b1b; }
+    .sla-badge.p2 { background: var(--amber-lt); color: #92400e; }
+    .sla-badge.p3 { background: var(--blue-50); color: #1e40af; }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-brand">
+    <div class="brand-logo">🏢</div>
+    <div class="brand-text">
+      <h1>Apex Corp HR</h1>
+      <span>Management Suite</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="header-version">v1.0.0</span>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigation</div>
+      <a class="nav-item" href="/dashboard"><span class="nav-icon">⚡</span><span>Overview</span></a>
+      <a class="nav-item" href="/dashboard"><span class="nav-icon">📖</span><span>API Docs</span></a>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Data</div>
+      <a class="nav-item" href="/database-viewer"><span class="nav-icon">🗄️</span><span>View Database</span></a>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Resources</div>
+      <a class="nav-item" href="/docs" target="_blank"><span class="nav-icon">🔧</span><span>Swagger UI</span></a>
+      <a class="nav-item" href="/redoc" target="_blank"><span class="nav-icon">📋</span><span>ReDoc</span></a>
+      <a class="nav-item active" href="/support"><span class="nav-icon">🤝</span><span>Company Support</span></a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-card">
+        <p><strong>HR API v1.0.0</strong><br/>FastAPI · PostgreSQL · JWT Auth · Async</p>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-content">
+        <div class="hero-eyebrow">Support Centre</div>
+        <h1>We're here to help your HR team succeed</h1>
+        <p>Get answers to your API questions, connect with our support engineers, and explore documentation for the full HR Management platform.</p>
+        <div class="hero-actions">
+          <a href="mailto:hr-support@apexcorp.com" class="btn btn-white">✉️ Email Support</a>
+          <a href="/redoc" class="btn btn-ghost">📖 API Reference</a>
+        </div>
+        <div class="hero-stats">
+          <div><div class="hero-stat-value">99.9%</div><div class="hero-stat-label">Uptime SLA</div></div>
+          <div><div class="hero-stat-value">&lt; 4h</div><div class="hero-stat-label">P1 Response Time</div></div>
+          <div><div class="hero-stat-value">6</div><div class="hero-stat-label">API Modules</div></div>
+          <div><div class="hero-stat-value">24/7</div><div class="hero-stat-label">Monitoring</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- About Us -->
+      <div>
+        <div class="section-eyebrow">About Us</div>
+        <div class="section-title">Built for modern HR teams</div>
+        <div class="section-subtitle">Apex Corp HR is a purpose-built Human Resource Management platform offering a fully async, production-grade REST API for managing the complete employee lifecycle — from onboarding to payroll.</div>
+        <div class="about-grid">
+          <div class="about-card">
+            <span class="about-card-icon">🔐</span>
+            <h3>Enterprise Security</h3>
+            <p>OAuth2 + JWT authentication with bcrypt password hashing, role-based access control, and token refresh flows out of the box.</p>
+          </div>
+          <div class="about-card">
+            <span class="about-card-icon">⚡</span>
+            <h3>Fully Async</h3>
+            <p>Built on FastAPI with asyncpg and SQLAlchemy async — handles thousands of concurrent requests without blocking the event loop.</p>
+          </div>
+          <div class="about-card">
+            <span class="about-card-icon">🗄️</span>
+            <h3>PostgreSQL Native</h3>
+            <p>Structured relational data with full ORM support, cascading deletes, indexed queries, and Alembic migration support.</p>
+          </div>
+          <div class="about-card">
+            <span class="about-card-icon">📖</span>
+            <h3>Self-Documenting</h3>
+            <p>Auto-generated OpenAPI schema with custom branded ReDoc and Swagger UI — always in sync with your live endpoints.</p>
+          </div>
+          <div class="about-card">
+            <span class="about-card-icon">🏖️</span>
+            <h3>Leave Management</h3>
+            <p>Submit, review, approve and audit leave requests — annual, sick, maternity/paternity, and emergency leave types supported.</p>
+          </div>
+          <div class="about-card">
+            <span class="about-card-icon">💰</span>
+            <h3>Payroll Engine</h3>
+            <p>Automated net-pay calculations with configurable bonuses and deductions per pay period; full audit trail included.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div>
+        <div class="section-eyebrow">Contact</div>
+        <div class="section-title">Get in touch</div>
+        <div class="section-subtitle">Our support team is available during business hours. For urgent production issues, use the P1 escalation email.</div>
+        <div class="contact-grid">
+          <div class="contact-card">
+            <div class="contact-icon">✉️</div>
+            <div class="contact-info">
+              <div class="contact-label">Support Email</div>
+              <div class="contact-value"><a href="mailto:hr-support@apexcorp.com">hr-support@apexcorp.com</a></div>
+              <div class="contact-sub">Mon – Fri, 8am – 6pm WAT</div>
+            </div>
+          </div>
+          <div class="contact-card">
+            <div class="contact-icon">🚨</div>
+            <div class="contact-info">
+              <div class="contact-label">P1 Escalation</div>
+              <div class="contact-value"><a href="mailto:oncall@apexcorp.com">oncall@apexcorp.com</a></div>
+              <div class="contact-sub">Production outages only · 24/7</div>
+            </div>
+          </div>
+          <div class="contact-card">
+            <div class="contact-icon">💬</div>
+            <div class="contact-info">
+              <div class="contact-label">Internal Slack</div>
+              <div class="contact-value">#hr-api-support</div>
+              <div class="contact-sub">Fastest response for internal teams</div>
+            </div>
+          </div>
+          <div class="contact-card">
+            <div class="contact-icon">📍</div>
+            <div class="contact-info">
+              <div class="contact-label">Headquarters</div>
+              <div class="contact-value">Apex Corp</div>
+              <div class="contact-sub">Freetown, Sierra Leone</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- System Status -->
+      <div>
+        <div class="section-eyebrow">System Status</div>
+        <div class="section-title">All systems operational</div>
+        <div class="status-grid">
+          <div class="status-item"><span class="status-light green"></span><div class="status-info"><div class="status-name">HR API</div><div class="status-uptime">99.98% · 30 days</div></div></div>
+          <div class="status-item"><span class="status-light green"></span><div class="status-info"><div class="status-name">PostgreSQL</div><div class="status-uptime">99.99% · 30 days</div></div></div>
+          <div class="status-item"><span class="status-light green"></span><div class="status-info"><div class="status-name">Auth Service</div><div class="status-uptime">100% · 30 days</div></div></div>
+          <div class="status-item"><span class="status-light green"></span><div class="status-info"><div class="status-name">API Docs</div><div class="status-uptime">100% · 30 days</div></div></div>
+        </div>
+
+        <table class="sla-table" style="margin-top:1.5rem; background:var(--white); color:var(--slate-900); border-radius:var(--radius); overflow:hidden; border:1px solid var(--slate-200); box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+          <thead>
+            <tr>
+              <th>Priority</th>
+              <th>Description</th>
+              <th>First Response</th>
+              <th>Resolution Target</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="sla-badge p1">P1 Critical</span></td><td>Complete service outage</td><td>30 minutes</td><td>4 hours</td></tr>
+            <tr><td><span class="sla-badge p2">P2 High</span></td><td>Core feature degraded</td><td>2 hours</td><td>1 business day</td></tr>
+            <tr><td><span class="sla-badge p3">P3 Normal</span></td><td>Non-critical bug or question</td><td>1 business day</td><td>5 business days</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- FAQ -->
+      <div>
+        <div class="section-eyebrow">FAQ</div>
+        <div class="section-title">Frequently Asked Questions</div>
+        <div class="section-subtitle">Common questions about integrating with and using the HR Management API.</div>
+        <div class="faq-list">
+
+          <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+              How do I authenticate with the API?
+              <span class="faq-chevron">▼</span>
+            </div>
+            <div class="faq-answer">
+              Use the OAuth2 password flow at <code>POST /auth/token</code> with your <code>username</code> (email) and <code>password</code>. The response includes an <code>access_token</code> (30 min) and a <code>refresh_token</code> (7 days). Pass the access token in all subsequent requests as <code>Authorization: Bearer &lt;token&gt;</code>. When the access token expires, call <code>POST /auth/refresh</code> with the refresh token to get a new pair.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+              What roles are available and what can each do?
+              <span class="faq-chevron">▼</span>
+            </div>
+            <div class="faq-answer">
+              There are four roles: <code>admin</code> (full access, user management, delete operations), <code>hr_manager</code> (read + write employees, payroll, leave — no user deletion), <code>employee</code> (read own profile, submit leave requests), and <code>readonly</code> (read-only access to non-sensitive endpoints). Assign roles during user creation or update them via <code>PATCH /users/{id}</code> — only admins can change roles.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+              How do I create an employee?
+              <span class="faq-chevron">▼</span>
+            </div>
+            <div class="faq-answer">
+              First create a user account via <code>POST /auth/register</code> or <code>POST /users/</code> (admin only). Note the returned <code>id</code>. Then call <code>POST /employees/</code> with <code>user_id</code>, <code>first_name</code>, <code>last_name</code>, and <code>hire_date</code>. An <code>employee_number</code> is auto-generated (e.g. <code>EMP-000001</code>) if you don't supply one. You can optionally assign <code>department_id</code> and <code>role_id</code> at creation or update them later.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+              How does pagination work?
+              <span class="faq-chevron">▼</span>
+            </div>
+            <div class="faq-answer">
+              List endpoints like <code>GET /employees/</code> and <code>GET /users/</code> support <code>?page=1&amp;per_page=20</code> query parameters (default 20 per page, max 100). The response includes a <code>meta</code> object with <code>total</code>, <code>page</code>, <code>per_page</code>, and <code>pages</code> fields so you can build paginated UIs easily.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+              What is the async employee enrichment endpoint?
+              <span class="faq-chevron">▼</span>
+            </div>
+            <div class="faq-answer">
+              <code>GET /employees/{id}/enrich</code> demonstrates async I/O concurrency. It fetches the employee from the database and simultaneously fires two external HTTP calls using <code>asyncio.gather()</code>, which runs both tasks concurrently rather than sequentially — cutting total wait time. This pattern is the recommended approach for any endpoint that needs to fan out to multiple services.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+              How do I set up the database locally?
+              <span class="faq-chevron">▼</span>
+            </div>
+            <div class="faq-answer">
+              Install PostgreSQL and create a database and user matching your <code>.env</code> file values. Copy <code>.env.example</code> to <code>.env</code> and fill in <code>DATABASE_URL</code> and <code>SYNC_DATABASE_URL</code>. Run <code>uvicorn main:app --reload</code> — the app calls <code>init_db()</code> on startup which auto-creates all tables. For production, use Alembic migrations instead of <code>init_db()</code>.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <div class="faq-question" onclick="toggleFaq(this)">
+              Where is the interactive API documentation?
+              <span class="faq-chevron">▼</span>
+            </div>
+            <div class="faq-answer">
+              Three documentation interfaces are available: the <strong>custom branded ReDoc</strong> at <code>/redoc</code> (also at <code>/docs/hr</code>) with HR-specific theming and response grouping; the standard <strong>Swagger UI</strong> at <code>/docs</code> which lets you try endpoints directly in the browser; and the raw <strong>OpenAPI JSON schema</strong> at <code>/openapi.json</code> for programmatic consumption or import into tools like Postman or Insomnia.
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </main>
+</div>
+
+<script>
+  function toggleFaq(el) {
+    const answer = el.nextElementSibling;
+    const isOpen = el.classList.contains('open');
+    // Close all
+    document.querySelectorAll('.faq-question.open').forEach(q => {
+      q.classList.remove('open');
+      q.nextElementSibling.classList.remove('open');
+    });
+    // Open clicked if it was closed
+    if (!isOpen) {
+      el.classList.add('open');
+      answer.classList.add('open');
+    }
+  }
+</script>
+</body>
+</html>

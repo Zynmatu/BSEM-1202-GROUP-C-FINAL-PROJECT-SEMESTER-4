@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HR Management — Database Viewer</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --blue-900:  #0e1b4d;
+      --blue-800:  #0e3a9e;
+      --blue-700:  #1a56db;
+      --blue-100:  #dbeafe;
+      --blue-50:   #eff6ff;
+      --amber:     #f59e0b;
+      --green:     #10b981;
+      --green-lt:  #ecfdf5;
+      --red:       #ef4444;
+      --slate-950: #020617;
+      --slate-900: #0f172a;
+      --slate-800: #1e293b;
+      --slate-700: #334155;
+      --slate-600: #475569;
+      --slate-400: #94a3b8;
+      --slate-200: #e2e8f0;
+      --slate-100: #f1f5f9;
+      --slate-50:  #f8fafc;
+      --white:     #ffffff;
+      --sidebar-w: 260px;
+      --header-h:  64px;
+      --radius:    12px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: var(--slate-100); color: var(--slate-800); min-height: 100vh; }
+
+    /* Header */
+    .header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: var(--header-h);
+      background: linear-gradient(135deg, var(--blue-900) 0%, var(--blue-800) 40%, var(--blue-700) 100%);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 1.5rem 0 0;
+      box-shadow: 0 2px 24px rgba(14,58,158,0.45);
+    }
+    .header-brand {
+      display: flex; align-items: center; gap: 0;
+      width: var(--sidebar-w); padding: 0 1.25rem;
+      border-right: 1px solid rgba(255,255,255,0.1); height: 100%;
+    }
+    .brand-logo { width: 40px; height: 40px; margin-right: 12px; background: rgba(255,255,255,0.12); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+    .brand-text h1 { font-size: 15px; font-weight: 700; color: #fff; }
+    .brand-text span { font-size: 10px; color: rgba(255,255,255,0.55); letter-spacing: 0.8px; text-transform: uppercase; }
+    .header-right { display: flex; align-items: center; gap: 1rem; }
+    .header-version { background: rgba(255,255,255,0.12); color: var(--slate-900); font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; }
+
+    /* Layout */
+    .layout { display: flex; height: 100vh; padding-top: var(--header-h); }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar-w); flex-shrink: 0;
+      background: var(--slate-900); overflow-y: auto;
+      display: flex; flex-direction: column;
+      border-right: 1px solid rgba(255,255,255,0.05);
+      color: rgba(255,255,255,0.9);
+    }
+    .sidebar-section { padding: 1.25rem 1rem 0.5rem; }
+    .sidebar-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.65); padding: 0 0.5rem; margin-bottom: 0.5rem; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border-radius: 8px; margin-bottom: 2px;
+      color: rgba(255,255,255,0.84); font-size: 13.5px; font-weight: 500;
+      text-decoration: none; transition: all 0.18s;
+    }
+    .nav-item:hover { background: rgba(255,255,255,0.06); color: var(--slate-900); }
+    .nav-item.active { background: rgba(26,86,219,0.2); color: var(--blue-100); position: relative; }
+    .nav-item.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 60%; background: var(--blue-700); border-radius: 0 2px 2px 0; }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+    .sidebar-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 0.75rem 1rem; }
+    .sidebar-footer { margin-top: auto; padding: 1rem; border-top: 1px solid rgba(255,255,255,0.05); }
+    .sidebar-footer-card { background: rgba(26,86,219,0.15); border: 1px solid rgba(26,86,219,0.3); border-radius: 10px; padding: 12px 14px; }
+    .sidebar-footer-card p { font-size: 11.5px; color: rgba(255,255,255,0.78); line-height: 1.4; }
+    .sidebar-footer-card strong { color: #fff; }
+
+    /* Main */
+    .main { flex: 1; overflow-y: auto; padding: 2rem; background: var(--slate-50); }
+
+    /* Page title */
+    .page-head { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+    .page-head h2 { font-size: 22px; font-weight: 800; color: var(--slate-900); letter-spacing: -0.5px; }
+    .page-head p { font-size: 13.5px; color: var(--slate-500); margin-top: 4px; }
+    .page-actions { display: flex; gap: 8px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      cursor: pointer; border: none; text-decoration: none; transition: all 0.18s;
+    }
+    .btn-primary { background: var(--blue-700); color: #fff; }
+    .btn-primary:hover { background: var(--blue-800); box-shadow: 0 4px 12px rgba(26,86,219,0.35); }
+    .btn-outline { background: var(--white); color: var(--slate-700); border: 1px solid var(--slate-200); }
+    .btn-outline:hover { border-color: var(--blue-700); color: var(--blue-700); }
+
+    .toolbar,
+    .status-bar,
+    .table-container,
+    .page-btn,
+    .btn-outline {
+      color: var(--slate-900);
+    }
+
+    /* Toolbar */
+    .toolbar {
+      background: var(--white); border: 1px solid var(--slate-200);
+      border-radius: var(--radius); padding: 1rem 1.25rem;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;
+      margin-bottom: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      color: var(--slate-900);
+    }
+    .toolbar-left { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+    .search-box {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--slate-100); border: 1px solid var(--slate-200);
+      border-radius: 8px; padding: 7px 12px;
+    }
+    .search-box input {
+      border: none; background: transparent; outline: none;
+      font-family: 'Inter', sans-serif; font-size: 13px; color: var(--slate-700);
+      width: 220px;
+    }
+    .search-box input::placeholder { color: var(--slate-400); }
+    select {
+      background: var(--slate-100); border: 1px solid var(--slate-200);
+      border-radius: 8px; padding: 7px 12px; font-family: 'Inter', sans-serif;
+      font-size: 13px; color: var(--slate-700); cursor: pointer; outline: none;
+    }
+    .toolbar-info { font-size: 12.5px; color: var(--slate-500); }
+    #record-count { font-weight: 700; color: var(--slate-800); }
+
+    /* Status bar */
+    .status-bar {
+      background: var(--white); border: 1px solid var(--slate-200);
+      border-radius: 8px; padding: 10px 16px;
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 1.25rem; font-size: 13px;
+      color: var(--slate-900);
+    }
+    .status-indicator { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .status-indicator.loading { background: var(--amber); animation: blink 1s infinite; }
+    .status-indicator.success { background: var(--green); }
+    .status-indicator.error   { background: var(--red); }
+    @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    #status-text { color: var(--slate-600); }
+    .status-time { margin-left: auto; font-size: 11.5px; color: var(--slate-400); font-family: 'JetBrains Mono', monospace; }
+
+    /* Table container */
+    .table-container {
+      background: var(--white); border: 1px solid var(--slate-200);
+      border-radius: var(--radius); overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+      color: var(--slate-900);
+    }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; color: inherit; }
+    thead { background: var(--slate-900); }
+    thead th {
+      padding: 13px 16px; text-align: left;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.7px; color: var(--white);
+      white-space: nowrap; cursor: pointer; user-select: none;
+      transition: color 0.15s;
+    }
+    thead th:hover { color: var(--white); }
+    thead th .sort-icon { margin-left: 4px; opacity: 0.5; }
+    thead th.sorted { color: var(--blue-100); }
+    thead th.sorted .sort-icon { opacity: 1; }
+
+    tbody tr { border-bottom: 1px solid var(--slate-100); transition: background 0.12s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--blue-50); }
+    tbody td { padding: 12px 16px; font-size: 13.5px; color: var(--slate-700); vertical-align: middle; }
+
+    .cell-id { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--slate-500); font-weight: 500; }
+    .cell-name { font-weight: 600; color: var(--slate-900); }
+    .cell-email { color: var(--blue-700); font-size: 13px; }
+    .cell-date { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--slate-500); }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 700; text-transform: capitalize; letter-spacing: 0.2px;
+    }
+    .badge-role-admin      { background: #fef3c7; color: #92400e; }
+    .badge-role-hr_manager { background: var(--blue-50); color: #1e40af; }
+    .badge-role-employee   { background: var(--green-lt); color: #065f46; }
+    .badge-role-readonly   { background: var(--slate-100); color: var(--slate-600); }
+    .badge-active   { background: var(--green-lt); color: #065f46; }
+    .badge-inactive { background: #fef2f2; color: #991b1b; }
+
+    /* Empty / loading states */
+    .table-state {
+      text-align: center; padding: 4rem 2rem;
+      color: var(--slate-400); font-size: 14px;
+    }
+    .table-state .icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+    .table-state h3 { font-size: 16px; font-weight: 700; color: var(--slate-700); margin-bottom: 0.5rem; }
+
+    /* Table footer */
+    .table-footer {
+      padding: 12px 16px; background: var(--slate-50);
+      border-top: 1px solid var(--slate-200);
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;
+    }
+    .table-footer span { font-size: 12.5px; color: var(--slate-500); }
+    .pagination { display: flex; gap: 4px; }
+    .page-btn {
+      width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--slate-200);
+      background: var(--white); cursor: pointer; font-size: 12px; font-weight: 600;
+      color: var(--slate-600); display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+    .page-btn:hover, .page-btn.active { background: var(--blue-700); color: #fff; border-color: var(--blue-700); }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* JSON inspector panel */
+    .inspector {
+      background: var(--slate-900); border-radius: var(--radius);
+      padding: 1.25rem; margin-top: 1.25rem;
+    }
+    .inspector-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+    .inspector-header h3 { font-size: 13px; font-weight: 700; color: var(--white); }
+    .inspector pre {
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      color: #f8fafc; line-height: 1.6; overflow-x: auto;
+      max-height: 200px; overflow-y: auto;
+    }
+    .inspector pre .k { color: #60a5fa; }
+    .inspector pre .s { color: #4ade80; }
+    .inspector pre .n { color: #f59e0b; }
+    .inspector pre .b { color: #f472b6; }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-brand">
+    <div class="brand-logo">🏢</div>
+    <div class="brand-text">
+      <h1>Apex Corp HR</h1>
+      <span>Management Suite</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="header-version">v1.0.0</span>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Navigation</div>
+      <a class="nav-item" href="/dashboard"><span class="nav-icon">⚡</span><span>Overview</span></a>
+      <a class="nav-item" href="/dashboard"><span class="nav-icon">📖</span><span>API Docs</span></a>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Data</div>
+      <a class="nav-item active" href="/database-viewer"><span class="nav-icon">🗄️</span><span>View Database</span></a>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Resources</div>
+      <a class="nav-item" href="/docs" target="_blank"><span class="nav-icon">🔧</span><span>Swagger UI</span></a>
+      <a class="nav-item" href="/redoc" target="_blank"><span class="nav-icon">📋</span><span>ReDoc</span></a>
+      <a class="nav-item" href="/support"><span class="nav-icon">🤝</span><span>Company Support</span></a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-footer-card">
+        <p><strong>HR API v1.0.0</strong><br/>FastAPI · PostgreSQL · JWT Auth · Async</p>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-head">
+      <div>
+        <h2>🗄️ Database Viewer</h2>
+        <p>Live read from <code>/api/users</code> — data refreshes automatically on page load.</p>
+      </div>
+      <div class="page-actions">
+        <button class="btn btn-outline" onclick="loadData()">🔄 Refresh</button>
+        <button class="btn btn-primary" onclick="exportCSV()">⬇️ Export CSV</button>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <div class="status-bar">
+      <span class="status-indicator loading" id="status-dot"></span>
+      <span id="status-text">Connecting to API…</span>
+      <span class="status-time" id="status-time"></span>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-box">
+          <span>🔍</span>
+          <input type="text" id="search-input" placeholder="Search by name or email…" oninput="filterTable()" />
+        </div>
+        <select id="role-filter" onchange="filterTable()">
+          <option value="">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="hr_manager">HR Manager</option>
+          <option value="employee">Employee</option>
+          <option value="readonly">Read Only</option>
+        </select>
+        <select id="active-filter" onchange="filterTable()">
+          <option value="">All Status</option>
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
+      </div>
+      <div class="toolbar-info">
+        Showing <span id="record-count">0</span> records
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-container">
+      <div class="table-wrap">
+        <table id="users-table">
+          <thead>
+            <tr>
+              <th onclick="sortTable('id')" class="sorted">ID <span class="sort-icon" id="sort-id">↑</span></th>
+              <th onclick="sortTable('name')">Full Name <span class="sort-icon" id="sort-name">↕</span></th>
+              <th onclick="sortTable('email')">Email <span class="sort-icon" id="sort-email">↕</span></th>
+              <th onclick="sortTable('role')">Role <span class="sort-icon" id="sort-role">↕</span></th>
+              <th onclick="sortTable('is_active')">Status <span class="sort-icon" id="sort-is_active">↕</span></th>
+              <th onclick="sortTable('created_at')">Created <span class="sort-icon" id="sort-created_at">↕</span></th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <tr><td colspan="6" class="table-state">
+              <span class="icon">⏳</span>
+              <h3>Loading data…</h3>
+              <p>Fetching records from the API</p>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="table-footer">
+        <span id="page-info">Page 1 of 1</span>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+
+    <!-- JSON Inspector -->
+    <div class="inspector">
+      <div class="inspector-header">
+        <h3>🔬 Raw API Response  <small style="color:var(--slate-500);font-size:11px;font-weight:400;margin-left:8px;">GET /api/users</small></h3>
+        <button class="btn btn-outline" style="padding:4px 12px;font-size:11px;" onclick="copyJSON()">Copy JSON</button>
+      </div>
+      <pre id="json-output">Waiting for API response…</pre>
+    </div>
+  </main>
+</div>
+
+<script>
+  let allData = [];
+  let filtered = [];
+  let sortKey = 'id';
+  let sortDir = 1;
+  const PER_PAGE = 15;
+  let currentPage = 1;
+
+  // ── Fetch on load ────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', loadData);
+
+  async function loadData() {
+    setStatus('loading', 'Fetching data from /api/users…');
+    const start = Date.now();
+    try {
+      const res = await fetch('/api/users', {
+        headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') }
+      });
+
+      if (res.status === 401) {
+        // Show demo data when not authenticated
+        allData = getDemoData();
+        setStatus('success', 'Demo data loaded (authenticate to see live data)');
+      } else if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      } else {
+        allData = await res.json();
+        setStatus('success', `Loaded ${allData.length} records in ${Date.now()-start}ms`);
+      }
+
+      document.getElementById('json-output').innerHTML = syntaxHighlight(JSON.stringify(allData.slice(0,3), null, 2) + (allData.length > 3 ? '\n// … and ' + (allData.length-3) + ' more' : ''));
+      filterTable();
+    } catch (err) {
+      allData = getDemoData();
+      setStatus('error', 'API error — showing demo data. ' + err.message);
+      filterTable();
+    }
+    document.getElementById('status-time').textContent = new Date().toLocaleTimeString();
+  }
+
+  function getDemoData() {
+    return [
+      { id:1, name:'Alice Johnson', email:'alice@apexcorp.com', role:'admin',      is_active:true,  created_at:'2024-01-10T09:00:00Z' },
+      { id:2, name:'Bob Martinez',  email:'bob@apexcorp.com',   role:'hr_manager', is_active:true,  created_at:'2024-02-15T10:30:00Z' },
+      { id:3, name:'Carol White',   email:'carol@apexcorp.com', role:'employee',   is_active:true,  created_at:'2024-03-20T08:15:00Z' },
+      { id:4, name:'David Kim',     email:'david@apexcorp.com', role:'employee',   is_active:false, created_at:'2024-04-01T11:00:00Z' },
+      { id:5, name:'Eva Chen',      email:'eva@apexcorp.com',   role:'readonly',   is_active:true,  created_at:'2024-04-12T14:20:00Z' },
+    ];
+  }
+
+  // ── Filter ───────────────────────────────────────────────────────
+  function filterTable() {
+    const q     = document.getElementById('search-input').value.toLowerCase();
+    const role  = document.getElementById('role-filter').value;
+    const act   = document.getElementById('active-filter').value;
+    filtered = allData.filter(u => {
+      const matchQ   = !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
+      const matchR   = !role || u.role === role;
+      const matchA   = act === '' || String(u.is_active) === act;
+      return matchQ && matchR && matchA;
+    });
+    sortData();
+  }
+
+  // ── Sort ─────────────────────────────────────────────────────────
+  function sortTable(key) {
+    if (sortKey === key) { sortDir *= -1; }
+    else { sortKey = key; sortDir = 1; }
+    document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted'));
+    document.querySelectorAll('.sort-icon').forEach(ic => ic.textContent = '↕');
+    const th = event.currentTarget;
+    th.classList.add('sorted');
+    th.querySelector('.sort-icon').textContent = sortDir === 1 ? '↑' : '↓';
+    sortData();
+  }
+
+  function sortData() {
+    filtered.sort((a, b) => {
+      let av = a[sortKey], bv = b[sortKey];
+      if (typeof av === 'string') av = av.toLowerCase();
+      if (typeof bv === 'string') bv = bv.toLowerCase();
+      return av < bv ? -sortDir : av > bv ? sortDir : 0;
+    });
+    currentPage = 1;
+    renderTable();
+  }
+
+  // ── Render ───────────────────────────────────────────────────────
+  function renderTable() {
+    document.getElementById('record-count').textContent = filtered.length;
+    const tbody = document.getElementById('table-body');
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+    const slice = filtered.slice((currentPage-1)*PER_PAGE, currentPage*PER_PAGE);
+
+    if (slice.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="table-state"><span class="icon">🔍</span><h3>No records found</h3><p>Try adjusting your search or filters.</p></td></tr>`;
+    } else {
+      tbody.innerHTML = slice.map(u => `
+        <tr onclick="inspectRow(${u.id})" style="cursor:pointer;">
+          <td class="cell-id">#${u.id}</td>
+          <td class="cell-name">${escHtml(u.name)}</td>
+          <td class="cell-email">${escHtml(u.email)}</td>
+          <td><span class="badge badge-role-${u.role}">${u.role.replace('_',' ')}</span></td>
+          <td><span class="badge ${u.is_active ? 'badge-active' : 'badge-inactive'}">${u.is_active ? '● Active' : '○ Inactive'}</span></td>
+          <td class="cell-date">${u.created_at ? new Date(u.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : '—'}</td>
+        </tr>`).join('');
+    }
+
+    // Pagination
+    document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+    const pg = document.getElementById('pagination');
+    pg.innerHTML = '';
+    const addBtn = (label, page, disabled=false, active=false) => {
+      const btn = document.createElement('button');
+      btn.className = 'page-btn' + (active ? ' active' : '');
+      btn.textContent = label;
+      btn.disabled = disabled;
+      btn.onclick = () => { currentPage = page; renderTable(); };
+      pg.appendChild(btn);
+    };
+    addBtn('‹', currentPage-1, currentPage===1);
+    for (let i=1; i<=totalPages; i++) { if (totalPages<=6||Math.abs(i-currentPage)<=1||i===1||i===totalPages) addBtn(i,i,false,i===currentPage); }
+    addBtn('›', currentPage+1, currentPage===totalPages);
+  }
+
+  function inspectRow(id) {
+    const row = allData.find(u => u.id === id);
+    if (row) document.getElementById('json-output').innerHTML = syntaxHighlight(JSON.stringify(row, null, 2));
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────
+  function setStatus(type, msg) {
+    const dot = document.getElementById('status-dot');
+    dot.className = 'status-indicator ' + type;
+    document.getElementById('status-text').textContent = msg;
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function syntaxHighlight(json) {
+    return json
+      .replace(/"([^"]+)":/g, '<span class="k">"$1"</span>:')
+      .replace(/: "([^"]*)"/g, ': <span class="s">"$1"</span>')
+      .replace(/: ([\d.]+)/g, ': <span class="n">$1</span>')
+      .replace(/: (true|false)/g, ': <span class="b">$1</span>');
+  }
+
+  function copyJSON() {
+    navigator.clipboard.writeText(JSON.stringify(allData, null, 2));
+    alert('JSON copied to clipboard!');
+  }
+
+  function exportCSV() {
+    if (!filtered.length) return;
+    const keys = Object.keys(filtered[0]);
+    const csv = [keys.join(','), ...filtered.map(r => keys.map(k => JSON.stringify(r[k]??'')).join(','))].join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+    a.download = 'hr_users_' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+  }
+</script>
+</body>
+</html>
